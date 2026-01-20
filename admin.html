@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>Admin - จัดการสต็อก & ออเดอร์</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div style="text-align: right; padding: 10px;">
+    <a href="logout.php" class="btn-logout">ออกจากระบบ</a>
+</div>
+
+
+<style>
+.btn-logout {
+    background-color: #ff4d4d; /* สีแดง */
+    color: white;
+    padding: 10px 20px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-family: sans-serif;
+}
+.btn-logout:hover {
+    background-color: #cc0000;
+}
+</style>
+<div class="container mt-5">
+
+
+<!-- ================= เพิ่มสต็อก ================= -->
+<h4 class="mb-3">➕ เพิ่มสต็อกสินค้า</h4>
+
+<div class="row g-2 mb-3">
+  <div class="col-md-4">
+     <select id="productSelect" class="form-select">
+  <option value="shop_industry">เสื้อช็อปนักศึกษาอุตสาหกรรม</option>
+  <option value="shop_it">เสื้อช็อปนักศึกษาอุตสาหกรรม IT</option>
+  <option value="shop_commerce">เสื้อช็อปนักศึกษาพาณิช</option>
+  <option value="sport_pvch">เสื้อพละ ปวช</option>
+  <option value="sport_pvs">เสื้อพละ ปวส</option>
+  <option value="jacket_long">เสื้อกันหนาวแขนยาว</option>
+  <option value="necktie_dark">เน็คไทสีกรม</option>
+  <option value="necktie_blue">เน็คไทสีฟ้าแผนกคอม</option>
+  <option value="necktie_red">เน็คไทสีแดง</option>
+  <option value="badge">ตุ้งติ้งติดเสื้อ</option>
+  <option value="belt">เข็มขัดนักศึกษา</option>
+  <option value="belt_buckle">หัวเข็มขัดนักศึกษา</option>
+</select>
+
+  </div>
+
+  <div class="col-md-3" id="sizeWrapper">
+    <select id="stockSize" class="form-select">
+      <option value="S">S</option>
+      <option value="M">M</option>
+      <option value="L">L</option>
+      <option value="XL">XL</option>
+      <option value="XXL">XXL</option>
+      <option value="ONE">ONE SIZE</option>
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <input type="number" id="stockQty" class="form-control" placeholder="จำนวน">
+  </div>
+
+  <div class="col-md-2">
+    <button class="btn btn-success w-100" onclick="addStock()">เพิ่ม</button>
+  </div>
+</div>
+
+<h5>📦 สต็อกปัจจุบัน</h5>
+<ul id="stockDisplay" class="list-group mb-4"></ul>
+
+<hr class="my-4">
+
+<!-- ================= สรุปยอดขาย ================= -->
+<h4>📊 สรุปยอดขายต่อวัน</h4>
+
+<table class="table table-bordered mt-3">
+  <thead class="table-secondary">
+    <tr>
+      <th>วันที่</th>
+      <th>จำนวนออเดอร์</th>
+      <th>จำนวนสินค้าที่ขายได้</th>
+    </tr>
+  </thead>
+  <tbody id="dailySummary"></tbody>
+</table>
+<hr class="my-4">
+
+<h4>📩 ข้อความจากลูกค้า</h4>
+<div class="table-responsive">
+    <table class="table table-bordered table-hover mt-3">
+       <thead class="table-info">
+  <tr>
+    <th>วันที่</th>
+    <th>ชื่อลูกค้า</th>
+    <th>อีเมล</th>
+    <th>ข้อความ</th>
+    <th>สถานะ / จัดการ</th>
+  </tr>
+</thead>
+
+
+        <tbody id="contactMessagesTable">
+    <tr><td colspan="5" class="text-center">กำลังโหลดข้อมูล...</td>
+</tr>
+</tbody>
+    </table>
+</div>
+<hr class="my-4">
+
+<!-- ================= รายการสั่งซื้อ ================= -->
+<h4>📋 รายการสั่งซื้อของลูกค้า</h4>
+
+<table class="table table-bordered table-striped mt-3">
+  <thead class="table-dark">
+    <tr>
+      <th>#</th>
+      <th>ชื่อ</th>
+      <th>สินค้า</th>
+      <th>ไซส์</th>
+      <th>จำนวน</th>
+      <th>ที่อยู่</th>
+      <th>จัดส่ง</th>
+      <th>ชำระเงิน</th>
+      <th>สถานะ</th>
+      <th>จัดการ</th>
+      <th>เวลา</th>
+    </tr>
+  </thead>
+  <tbody id="orderTable"></tbody>
+</table>
+
+</div>
+
+<!-- ================= Firebase ================= -->
+<script type="module">
+  
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  doc,
+  getDoc,
+  setDoc,
+  updateDoc,
+  increment,
+  onSnapshot,
+  collection,
+  query,
+  orderBy
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* ===== Firebase ===== */
+const firebaseConfig = {
+  apiKey: "ของคุณ",
+  authDomain: "ของคุณ",
+  projectId: "father-3e37c",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ================== ปุ่มจัดการข้อความลูกค้า ==================
+
+// ✅ กดอ่านแล้ว
+window.markAsRead = async (id) => {
+  await updateDoc(doc(db, "contact_messages", id), {
+    status: "read"
+  });
+};
+
+// ✅ ตอบกลับลูกค้า
+window.replyMessage = async (id, email) => {
+  const reply = prompt("พิมพ์ข้อความตอบกลับถึง " + email);
+  if (!reply) return;
+
+  await updateDoc(doc(db, "contact_messages", id), {
+    reply: reply,
+    repliedAt: new Date(),
+    status: "read"
+  });
+
+  alert("ตอบกลับเรียบร้อยแล้ว");
+};
+
+
+
+/* ===== ค่าระบบ ===== */
+const ALL_SIZES = ["S","M","L","XL","XXL","ONE"];
+const ONE_SIZE_PRODUCTS = [
+  "belt",
+  "badge",
+  "necktie_dark",
+  "necktie_blue"
+];
+
+let unsubscribe = null;
+
+/* ===== ซ่อน / แสดงไซส์ ===== */
+function updateSizeUI(product) {
+  if (ONE_SIZE_PRODUCTS.includes(product)) {
+    sizeWrapper.style.display = "none";
+    stockSize.value = "ONE";
+  } else {
+    sizeWrapper.style.display = "block";
+    stockSize.value = "S";
+  }
+}
+
+/* ===== เพิ่มสต็อก ===== */
+window.addStock = async () => {
+  const product = productSelect.value;
+  const size = stockSize.value;
+  const qty = Number(stockQty.value);
+
+  if (!qty || qty <= 0) {
+    alert("กรุณาใส่จำนวน");
+    return;
+  }
+
+  const ref = doc(db, "products", product);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      stock: Object.fromEntries(ALL_SIZES.map(s => [s, 0]))
+    });
+  }
+
+  await updateDoc(ref, {
+    [`stock.${size}`]: increment(qty)
+  });
+
+  stockQty.value = "";
+};
+
+/* ===== ดูสต็อก ===== */
+function watchStock(product) {
+  if (unsubscribe) unsubscribe();
+
+  unsubscribe = onSnapshot(doc(db,"products",product), snap => {
+    if (!snap.exists()) {
+      stockDisplay.innerHTML =
+        "<li class='list-group-item'>ไม่มีข้อมูล</li>";
+      return;
+    }
+
+    const stock = snap.data().stock || {};
+    const showSizes = ONE_SIZE_PRODUCTS.includes(product)
+      ? ["ONE"]
+      : ["S","M","L","XL","XXL"];
+
+    stockDisplay.innerHTML = showSizes.map(size => `
+      <li class="list-group-item">${size}: ${stock[size] ?? 0}</li>
+    `).join("");
+  });
+}
+
+/* ===== อัปเดตสถานะออเดอร์ ===== */
+window.updateStatus = async (id, status) => {
+  await updateDoc(doc(db,"orders",id), { status });
+};
+
+/* ===== โหลดออเดอร์ ===== */
+function loadOrders() {
+  const q = query(collection(db,"orders"), orderBy("createdAt","desc"));
+
+  onSnapshot(q, snap => {
+    orderTable.innerHTML = "";
+    let i = 1;
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+      const id = docSnap.id;
+
+      orderTable.innerHTML += `
+        <tr>
+          <td>${i++}</td>
+          <td>${d.fullname || "-"}</td>
+          <td>${d.productId}</td>
+          <td>${d.size}</td>
+          <td>${d.qty}</td>
+          <td>${d.address}</td>
+          <td>${d.shipping}</td>
+          <td>${d.payment}</td>
+          <td>
+            <span class="badge ${
+              d.status === "จัดส่งแล้ว"
+              ? "bg-success"
+              : d.status === "ชำระเงินแล้ว"
+              ? "bg-primary"
+              : "bg-warning text-dark"
+            }">${d.status}</span>
+          </td>
+          <td>
+            ${
+              d.status === "รอชำระเงิน" && d.payment === "transfer"
+              ? `<button class="btn btn-sm btn-primary"
+                   onclick="updateStatus('${id}','ชำระเงินแล้ว')">
+                   ✔ ยืนยันการชำระเงิน
+                 </button>`
+              : d.status === "ชำระเงินแล้ว" || d.payment === "cod"
+              ? `<button class="btn btn-sm btn-success"
+                   onclick="updateStatus('${id}','จัดส่งแล้ว')">
+                   🚚 จัดส่งแล้ว
+                 </button>`
+              : "-"
+            }
+          </td>
+          <td>${d.createdAt?.toDate().toLocaleString("th-TH") || "-"}</td>
+        </tr>
+      `;
+    });
+  });
+}
+
+function loadContactMessages() {
+  const table = document.getElementById("contactMessagesTable");
+
+  const q = query(
+    collection(db, "contact_messages"),
+    orderBy("createdAt", "desc")
+  );
+
+  onSnapshot(q,
+    snap => {
+      table.innerHTML = "";
+
+      if (snap.empty) {
+        table.innerHTML = `
+          <tr>
+            <td colspan="5" class="text-center">ยังไม่มีข้อความ</td>
+          </tr>`;
+        return;
+      }
+
+snap.forEach(docSnap => {
+  const d = docSnap.data();
+  const status = d.status ?? "unread";
+
+  table.innerHTML += `
+    <tr>
+      <td>${d.createdAt?.toDate()?.toLocaleString("th-TH") || "-"}</td>
+      <td>${d.name}</td>
+      <td>${d.email}</td>
+      <td>${d.message}</td>
+      <td>
+        <span class="badge ${status === "unread" ? "bg-danger" : "bg-success"}">
+          ${status === "unread" ? "ยังไม่อ่าน" : "อ่านแล้ว"}
+        </span>
+        <br>
+        ${status === "unread"
+          ? `<button class="btn btn-sm btn-outline-success mt-1"
+              onclick="markAsRead('${docSnap.id}')">
+              อ่านแล้ว
+            </button>`
+          : ""
+        }
+        <button class="btn btn-sm btn-outline-primary mt-1"
+          onclick="replyMessage('${docSnap.id}','${d.email}')">
+          ตอบกลับ
+        </button>
+      </td>
+    </tr>
+  `;
+});
+
+    },
+    error => {
+      console.error("🔥 โหลดข้อความผิดพลาด:", error);
+      table.innerHTML = `
+        <tr>
+          <td colspan="5" class="text-danger text-center">
+            โหลดข้อมูลไม่ได้ (ดู Console)
+          </td>
+        </tr>`;
+    }
+  );
+}
+
+/* ===== สรุปยอดรายวัน ===== */
+function loadDailySummary() {
+  onSnapshot(collection(db, "orders"), snap => {
+    const sum = {};
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+
+      if (
+        d.status !== "ชำระเงินแล้ว" &&
+        d.payment !== "cod"
+      ) return;
+
+      if (!d.createdAt) return;
+
+      const date = d.createdAt
+        .toDate()
+        .toLocaleDateString("th-TH");
+
+      if (!sum[date]) sum[date] = { orders: 0, qty: 0 };
+
+      sum[date].orders++;
+      sum[date].qty += Number(d.qty || 0);
+    });
+
+    dailySummary.innerHTML = "";
+
+    Object.entries(sum).forEach(([date, v]) => {
+      dailySummary.innerHTML += `
+        <tr>
+          <td>${date}</td>
+          <td>${v.orders}</td>
+          <td>${v.qty}</td>
+        </tr>
+      `;
+    });
+  });
+}
+
+  onSnapshot(collection(db,"orders"), snap => {
+    const sum = {};
+
+    snap.forEach(docSnap => {
+      const d = docSnap.data();
+
+      if (
+        d.status !== "ชำระเงินแล้ว" &&
+        d.payment !== "cod"
+      ) return;
+
+      if (!d.createdAt) return;
+
+      const date = d.createdAt.toDate().toLocaleDateString("th-TH");
+
+      if (!sum[date]) sum[date] = { orders: 0, qty: 0 };
+
+      sum[date].orders++;
+      sum[date].qty += Number(d.qty || 0);
+    });
+
+    dailySummary.innerHTML = "";
+
+    Object.entries(sum).forEach(([date, v]) => {
+      dailySummary.innerHTML += `
+        <tr>
+          <td>${date}</td>
+          <td>${v.orders}</td>
+          <td>${v.qty}</td>
+        </tr>
+      `;
+    });
+  });
+
+
+
+/* ===== Init ===== */
+updateSizeUI(productSelect.value);
+watchStock(productSelect.value);
+loadOrders();
+
+productSelect.addEventListener("change", e => {
+  updateSizeUI(e.target.value);
+  watchStock(e.target.value);
+});
+loadOrders();
+loadContactMessages();
+loadDailySummary();
+</script>
+
+
+
+

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>QR Code ประเมินผลงาน</title>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+</head>
+<body style="text-align:center; margin-top:50px;">
+
+<h2>สแกนเพื่อเข้าชมผลงาน</h2>
+
+<div id="qrcode"></div>
+
+<p>แพลตฟอร์มตลาดออนไลน์คนรุ่นใหม่</p>
+
+<script>
+new QRCode(document.getElementById("qrcode"), {
+    text: "http://172.20.10.2/wilasinee/",
+    width: 220,
+    height: 220
+});
+</script>
+
+</body>
+</html>

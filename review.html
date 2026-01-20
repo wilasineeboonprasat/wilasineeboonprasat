@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>รีวิวสินค้า</title>
+<style>
+    body { font-family: sans-serif; padding: 30px; }
+    .stars span {
+        font-size: 40px;
+        cursor: pointer;
+        color: #ccc;
+    }
+    .stars span.active {
+        color: gold;
+    }
+</style>
+</head>
+<body>
+
+<h3>⭐ ให้คะแนนสินค้า</h3>
+
+<form onsubmit="submitReview(); return false;">
+    <input type="text" id="name" placeholder="ชื่อของคุณ" required><br><br>
+
+    <div class="stars" id="stars">
+        <span data-value="1">★</span>
+        <span data-value="2">★</span>
+        <span data-value="3">★</span>
+        <span data-value="4">★</span>
+        <span data-value="5">★</span>
+    </div>
+    <input type="hidden" id="rating" required>
+
+    <br>
+    <textarea id="comment" placeholder="เขียนรีวิว..." required></textarea><br><br>
+
+    <button type="submit">ส่งรีวิว</button>
+</form>
+
+<hr>
+<h4>รีวิวทั้งหมด</h4>
+<div id="reviews"></div>
+
+<script>
+let selectedRating = 0;
+const stars = document.querySelectorAll("#stars span");
+
+stars.forEach(star => {
+    star.addEventListener("click", () => {
+        selectedRating = star.dataset.value;
+        document.getElementById("rating").value = selectedRating;
+
+        stars.forEach(s => s.classList.remove("active"));
+        for (let i = 0; i < selectedRating; i++) {
+            stars[i].classList.add("active");
+        }
+    });
+});
+
+function submitReview() {
+    const name = document.getElementById("name").value;
+    const rating = document.getElementById("rating").value;
+    const comment = document.getElementById("comment").value;
+
+    if (!rating) {
+        alert("กรุณาเลือกดาวก่อน");
+        return;
+    }
+
+    const review = { name, rating, comment };
+    const reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+    reviews.push(review);
+    localStorage.setItem("reviews", JSON.stringify(reviews));
+
+    alert("ขอบคุณสำหรับรีวิว 😊");
+    document.querySelector("form").reset();
+    stars.forEach(s => s.classList.remove("active"));
+
+    loadReviews();
+}
+
+function loadReviews() {
+    const reviews = JSON.parse(localStorage.getItem("reviews") || "[]");
+    const box = document.getElementById("reviews");
+    box.innerHTML = "";
+
+    reviews.forEach(r => {
+        box.innerHTML += `
+            <p>
+                <strong>${r.name}</strong> :
+                ${"★".repeat(r.rating)}<br>
+                ${r.comment}
+            </p>
+            <hr>
+        `;
+    });
+}
+
+loadReviews();
+</script>
+
+</body>
+</html>

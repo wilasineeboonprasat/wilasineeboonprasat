@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ตะกร้าสินค้า</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+  background: linear-gradient(135deg,#e3f2fd,#ffffff);
+}
+.cart-box{
+  background:#fff;
+  border-radius:10px;
+  padding:20px;
+}
+.price{
+  color:red;
+  font-weight:bold;
+}
+</style>
+</head>
+
+<body class="p-4">
+
+<div class="container">
+  <h2 class="mb-3">🛒 ตะกร้าสินค้า</h2>
+
+  <div class="cart-box">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>สินค้า</th>
+          <th>ราคา</th>
+          <th>จำนวน</th>
+          <th>รวม</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="cartList"></tbody>
+    </table>
+
+    <div class="text-end">
+      <h4>รวมทั้งหมด: <span class="price" id="totalPrice">0</span> บาท</h4>
+      <a href="checkout.html" class="btn btn-success mt-2">สั่งซื้อสินค้า</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const table = document.getElementById("cartList");
+const totalPriceEl = document.getElementById("totalPrice");
+
+// ✅ ดึงตะกร้าจาก localStorage
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+function renderCart() {
+  table.innerHTML = "";
+  let grandTotal = 0;
+
+  if (cart.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">ไม่มีสินค้าในตะกร้า</td>
+      </tr>
+    `;
+    totalPriceEl.innerText = 0;
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    const qty = item.qty ?? 1;
+    const price = Number(item.price) || 0;
+    const rowTotal = price * qty;
+    grandTotal += rowTotal;
+
+    table.innerHTML += `
+      <tr>
+        <td>${item.name}</td>
+        <td>${price}</td>
+        <td>${qty}</td>
+        <td>${rowTotal}</td>
+        <td>
+          <button class="btn btn-danger btn-sm" onclick="removeItem(${index})">
+            ลบ
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  totalPriceEl.innerText = grandTotal;
+}
+
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+// ✅ เรียกตอนโหลดหน้า
+renderCart();
+</script>
+
+
+</body>
+</html>

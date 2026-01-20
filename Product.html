@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>รายการสินค้า</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+
+<style>
+.cart-icon{
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  font-size: 28px;
+  text-decoration: none;
+  color: #0d6efd;
+  z-index: 999;
+}
+
+.cart-icon span{
+  position: absolute;
+  top: -8px;
+  right: -10px;
+  background: red;
+  color: white;
+  font-size: 14px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+</style>
+</head>
+
+<body class="p-4">
+
+
+<!-- ไอคอนตะกร้า -->
+<a href="cart.html" class="cart-icon">
+  🛒
+  <span id="cartCount">0</span>
+</a>
+
+<div class="container">
+<h1>รายการสินค้า</h1>
+<p class="text-muted">แพลตฟอร์มขายของออนไลน์สำหรับวิทยาลัยเทคนิคนางรอง</p>
+
+<div class="row g-4 mt-3">
+
+<!-- TEMPLATE สินค้ามีไซส์ -->
+<script>
+function productWithSize(id,name,price,img){
+document.write(`
+<div class="col-md-3">
+<div class="card h-100">
+<img src="${img}">
+<div class="card-body">
+<h6>${name}</h6>
+<p class="price">${price} บาท</p>
+<select class="form-select mb-2">
+<option>S</option><option>M</option><option>L</option><option>XL</option><option>XXL</option>
+</select>
+<button class="btn btn-primary w-100"
+onclick="addToCart('${id}','${name}',${price},this.previousElementSibling.value)">
+เพิ่มลงตะกร้า</button>
+</div></div></div>`);
+}
+
+function productNoSize(id,name,price,img){
+document.write(`
+<div class="col-md-3">
+<div class="card h-100">
+<img src="${img}">
+<div class="card-body">
+<h6>${name}</h6>
+<p class="price">${price} บาท</p>
+<button class="btn btn-primary w-100"
+onclick="addToCart('${id}','${name}',${price},'-')">
+เพิ่มลงตะกร้า</button>
+</div></div></div>`);
+}
+</script>
+
+<script>
+productWithSize("shop1","เสื้อช็อปนักศึกษาอุตสาหกรรม",300,"Sh1.jpg");
+productWithSize("shop2","เสื้อช็อปนักศึกษาอุตสาหกรรม IT",300,"Sh2.jpg");
+productWithSize("shop3","เสื้อช็อปนักศึกษาพาณิช",300,"Sh3.jpg");
+productWithSize("sport1","เสื้อพละ ปวช",250,"Sh4.jpg");
+productWithSize("sport2","เสื้อพละ ปวส",250,"Sh5.jpg");
+productWithSize("jacket","เสื้อกันหนาวแขนยาว",350,"Sh6.jpg");
+
+productNoSize("tie1","เน็คไทสีกรม",100,"Sh7.jpg");
+productNoSize("tie2","เน็คไทสีฟ้าแผนกคอม",100,"Sh9.jpg");
+productNoSize("tie3","เน็คไทสีแดง",100,"Sh8.jpg");
+productNoSize("pin","ตุ้งติ้งติดเสื้อ",45,"Sh10.jpg");
+productNoSize("beltHead","หัวเข็มขัดนักศึกษา",45,"Sh11.jpg");
+productNoSize("belt","เข็มขัดนักศึกษา",115,"Sh12.jpg");
+
+</script>
+
+</div>
+</div>
+
+<!-- ===== CART SCRIPT ===== -->
+<script>
+function getCart(){return JSON.parse(localStorage.getItem("cart"))||[];}
+function saveCart(c){localStorage.setItem("cart",JSON.stringify(c));updateCartCount();}
+function addToCart(id,name,price,size){
+let c=getCart();
+let i=c.find(p=>p.id===id&&p.size===size);
+i?i.qty++:c.push({id,name,price,size,qty:1});
+saveCart(c);
+}
+function updateCartCount(){
+document.getElementById("cartCount").innerText=
+getCart().reduce((s,i)=>s+i.qty,0);
+}
+updateCartCount();
+
+</script>
+<script>
+let count = localStorage.getItem("cartCount") || 0;
+document.getElementById("cartCount").innerText = count;
+
+document.querySelectorAll(".add-cart").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    count++;
+    localStorage.setItem("cartCount",count);
+    document.getElementById("cartCount").innerText = count;
+  });
+});
+</script>
+<script>
+/* ===============================
+   1. ดึงตะกร้าจาก localStorage
+================================ */
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+const table = document.getElementById("cartList");
+const totalPriceEl = document.getElementById("totalPrice");
+
+/* ===============================
+   2. แสดงตะกร้า
+================================ */
+function renderCart() {
+  table.innerHTML = "";
+  let grandTotal = 0;
+
+  if (cart.length === 0) {
+    table.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">
+          ยังไม่มีสินค้าในตะกร้า
+        </td>
+      </tr>
+    `;
+    totalPriceEl.innerText = "0";
+    return;
+  }
+
+  cart.forEach((item, index) => {
+    const qty = Number(item.qty) || 1;
+    const price = Number(item.price) || 0;
+    const rowTotal = price * qty;
+    grandTotal += rowTotal;
+
+    table.innerHTML += `
+      <tr>
+        <td>${item.name}</td>
+        <td>${price}</td>
+        <td>${qty}</td>
+        <td>${rowTotal}</td>
+        <td>
+          <button onclick="removeItem(${index})"
+            class="btn btn-danger btn-sm">ลบ</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  totalPriceEl.innerText = grandTotal;
+}
+
+/* ===============================
+   3. ลบสินค้า
+================================ */
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+/* ===============================
+   4. เรียกใช้งาน
+================================ */
+renderCart();
+</script>
+
+
+
+</body>
+</html>

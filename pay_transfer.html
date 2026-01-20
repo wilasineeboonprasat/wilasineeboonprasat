@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>ชำระเงิน</title>
+</head>
+<body>
+
+<h3>สแกน QR เพื่อโอนเงิน</h3>
+<img src="pay.jpg" width="300">
+<p>บัญชี: 123-456-7890 (นาย A)</p>
+<p>โอนแล้วกรุณาแนบสลิป</p>
+
+<form id="slipForm">
+  <input type="file" id="slip" required>
+  <button type="submit">ส่งสลิป</button>
+</form>
+
+<script>
+document.getElementById("slipForm").addEventListener("submit", function(e){
+  e.preventDefault();
+
+  alert("✅ ส่งสลิปเรียบร้อย");
+  window.location.href = "review.html";
+});
+</script>
+
+</body>
+</html>

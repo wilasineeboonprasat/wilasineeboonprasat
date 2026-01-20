@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ติดต่อเรา</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Sarabun', sans-serif; padding: 20px; background-color: #f8f9fa; }
+        .contact-container { max-width: 600px; margin: auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; margin-bottom: 15px; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        textarea { height: 120px; }
+        .btn-send { background-color: #0d6efd; color: white; border: none; width: 100%; padding: 12px; border-radius: 5px; font-weight: bold; }
+        .btn-send:hover { background-color: #0b5ed7; }
+    </style>
+</head>
+<body>
+
+<div class="contact-container">
+    <p><strong>วิทยาลัยเทคนิคนางรอง:</strong></p>
+    <p>📍 ที่อยู่: 1 ต.นางรอง อำเภอนางรอง จังหวัดบุรีรัมย์ 31110</p>
+    <p>📞 โทร: 044 631 556</p>
+    <p>✉️ Email: nrtech.ac.th@email.com</p>
+    <p>⏰ เวลาเปิด: ทุกวัน 08:30 - 15:30</p>
+
+    <hr>
+
+    <h3>ช่องทางออนไลน์</h3>
+    <p>
+      <a href="https://www.facebook.com/p/งานประชาสัมพันธ์วิทยาลัยเทคนิคนางรอง-100057554885400/" target="_blank" style="text-decoration:none;">
+        <img src="https://cdn-icons-png.flaticon.com/512/733/733547.png" width="24" style="vertical-align:middle;">
+        งานประชาสัมพันธ์วิทยาลัยเทคนิคนางรอง
+      </a>
+    </p>
+
+    <hr>
+
+    <h3>📩 ส่งข้อความถึงเรา</h3>
+    <input type="text" id="contact_name" placeholder="ชื่อของคุณ" required>
+    <input type="email" id="contact_email" placeholder="อีเมลของคุณ" required>
+    <textarea id="contact_msg" placeholder="พิมพ์ข้อความที่นี่..." required></textarea>
+
+    <button type="button" class="btn-send" id="btnSubmit">ส่งข้อความ</button>
+    
+    <div class="text-center mt-3">
+        <a href="Product.php" class="text-decoration-none text-secondary">← กลับไปเลือกสินค้า</a>
+    </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDl5O9jmLPX0uEMZbjUo0GgTfiWrj8uxLw",
+  authDomain: "father-3e37c.firebaseapp.com",
+  projectId: "father-3e37c",
+  storageBucket: "father-3e37c.firebasestorage.app",
+  messagingSenderId: "869858533970",
+  appId: "1:869858533970:web:01a37e6e5613b249afb58b",
+  measurementId: "G-Y1VL4TRCED"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// ฟังก์ชันส่งข้อความ
+async function sendMessage() {
+  const name = document.getElementById('contact_name').value.trim();
+  const email = document.getElementById('contact_email').value.trim();
+  const msg = document.getElementById('contact_msg').value.trim();
+  const btn = document.getElementById('btnSubmit');
+
+  if (!name || !email || !msg) {
+    alert("กรุณากรอกข้อมูลให้ครบถ้วนก่อนส่ง");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerText = "กำลังส่ง...";
+
+  try {
+  await addDoc(collection(db, "contact_messages"), {
+  name: name,
+  email: email,
+  message: msg,
+  status: "unread",        // ⭐ สำคัญมาก
+  createdAt: serverTimestamp()
+});
+
+    alert("ส่งข้อความสำเร็จ! แอดมินเห็นทันที");
+
+    document.getElementById('contact_name').value = "";
+    document.getElementById('contact_email').value = "";
+    document.getElementById('contact_msg').value = "";
+
+  } catch (e) {
+    console.error(e);
+    alert("เกิดข้อผิดพลาด: " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = "ส่งข้อความ";
+  }
+}
+
+document.getElementById('btnSubmit').addEventListener('click', sendMessage);
+</script>
+
+</body>
+</html>
